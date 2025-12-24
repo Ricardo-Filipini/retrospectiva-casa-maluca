@@ -4,484 +4,397 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Retrospectiva Casa Maluca 2025</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Carregando React e ReactDOM de forma segura -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Inter:wght@400;600;800&display=swap');
         
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            background-color: #f0fdf4; /* Fundo verde claro suave */
+            color: #1f2937;
         }
-        .comic {
-            font-family: 'Comic Neue', cursive;
-        }
-        .abada-gradient {
-            background: linear-gradient(135deg, #0000FF 50%, #FFA500 50%);
-        }
-        .animate-bounce-slow {
-            animation: bounce 3s infinite;
-        }
-        .neon-text {
-            text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff;
-        }
-        /* Custom Scrollbar to annoy Jilsão */
-        ::-webkit-scrollbar {
-            width: 12px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #FFA500; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #0000FF; 
-            border-radius: 6px;
-        }
+        .comic { font-family: 'Comic Neue', cursive; }
+        
+        /* Animações e Efeitos */
+        .abada-gradient { background: linear-gradient(135deg, #0000FF 50%, #FFA500 50%); }
+        .pizza-shape { clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%); }
+        
+        .card-hover:hover { transform: translateY(-4px); }
+        
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
-        const { 
-            Skull, PartyPopper, Baby, Pizza, Beer, 
-            Video, AlertTriangle, TrendingUp, Heart, 
-            Ghost, Crown, ShoppingCart, MessageCircle 
-        } = lucide;
+        const { useState, useEffect } = React;
 
-        // --- Componentes Auxiliares ---
+        // --- Componentes UI Reutilizáveis ---
 
-        const Card = ({ title, children, color = "white", icon: Icon }) => (
-            <div className={`bg-${color} border-4 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 mb-8 transform hover:-translate-y-1 transition-transform duration-200`}>
-                <div className="flex items-center gap-3 mb-4 border-b-2 border-dashed border-gray-400 pb-2">
-                    {Icon && <Icon size={32} className="text-purple-600" />}
-                    <h2 className="text-2xl font-black uppercase tracking-tighter">{title}</h2>
+        const Card = ({ title, emoji, children, bg = "bg-white", border = "border-gray-300" }) => (
+            <div className={`${bg} border-4 ${border} rounded-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,0.8)] p-6 mb-8 transition-all card-hover`}>
+                <div className="flex items-center gap-3 mb-4 border-b-2 border-dashed border-gray-400 pb-3">
+                    <span className="text-4xl">{emoji}</span>
+                    <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight leading-none">{title}</h2>
                 </div>
-                <div className="comic text-lg">
+                <div className="comic text-lg text-gray-800 leading-relaxed">
                     {children}
                 </div>
             </div>
         );
 
-        const Quote = ({ text, author }) => (
-            <div className="bg-yellow-100 p-4 border-l-8 border-yellow-500 my-4 italic">
-                "{text}"
-                <div className="text-right font-bold not-italic mt-2 text-sm">- {author}</div>
+        const Quote = ({ text, author, context }) => (
+            <div className="bg-yellow-50 p-4 border-l-4 border-yellow-500 my-4 rounded-r-lg relative">
+                <span className="text-2xl text-yellow-500 absolute top-2 left-2">"</span>
+                <p className="pl-4 font-medium italic text-gray-800">{text}</p>
+                <div className="mt-2 text-right">
+                    <span className="font-bold text-xs uppercase text-gray-900 block">- {author}</span>
+                    {context && <span className="text-xs text-gray-500 block">{context}</span>}
+                </div>
             </div>
         );
 
-        const Badge = ({ text, color = "bg-red-500" }) => (
-            <span className={`${color} text-white text-xs font-bold px-2 py-1 rounded-full uppercase mx-1`}>
+        const Tag = ({ text, color = "bg-gray-200" }) => (
+            <span className={`${color} px-2 py-1 rounded text-xs font-bold uppercase tracking-wide mr-2 mb-2 inline-block`}>
                 {text}
             </span>
         );
 
-        // --- Seções Principais ---
+        // --- Seções da Retrospectiva ---
 
-        const IntroSection = () => (
-            <div className="text-center py-10 px-4 bg-purple-900 text-white rounded-b-3xl mb-8 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-                    <div className="w-full h-full" style={{backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
-                </div>
-                <h1 className="text-4xl md:text-6xl font-black mb-4 neon-text transform -rotate-2">
-                    RETROSPECTIVA 2025
-                    <br/>
-                    <span className="text-yellow-400 text-2xl md:text-4xl">CASA MALUCA</span>
+        const Header = () => (
+            <header className="bg-purple-900 text-white p-8 md:p-12 text-center rounded-b-[40px] shadow-2xl mb-10 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-full opacity-5 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                <h1 className="text-4xl md:text-6xl font-black mb-2 transform -rotate-1 text-yellow-400 drop-shadow-lg">
+                    CASA MALUCA 2025
                 </h1>
-                <p className="text-xl max-w-2xl mx-auto comic">
-                    O ano em que a biologia colidiu com a zueira. De nascimentos a óbitos, de maratonas a pizzas quadradas.
-                </p>
-                <div className="mt-6 animate-bounce-slow">
-                    <span className="text-4xl">🍼 🍺 ✝️ 🍕</span>
+                <h2 className="text-xl md:text-2xl font-bold mb-6 font-mono text-purple-200">
+                    RELATÓRIO DE CONVERGÊNCIA CAÓTICA
+                </h2>
+                <div className="max-w-2xl mx-auto bg-purple-800/50 p-4 rounded-lg backdrop-blur-sm border border-purple-500">
+                    <p className="text-sm md:text-base comic">
+                        "O grupo que outrora discutia <strong>quem vai levar o gelo em barra</strong> agora discute <strong>quem comprou o carrinho de bebê na promoção</strong>."
+                    </p>
                 </div>
-            </div>
+                <div className="flex justify-center gap-6 mt-8 text-4xl animate-bounce">
+                    <span>👶</span><span>🍺</span><span>🏃‍♀️</span><span>🍕</span>
+                </div>
+            </header>
         );
 
-        const ZumbiSection = () => {
-            const [winkCount, setWinkCount] = useState(0);
-            
+        const Zumbi = () => {
+            const [winks, setWinks] = useState(0);
+
             return (
-                <Card title="Q1: O Zumbi da Sorte" color="green-100" icon={Ghost}>
-                    <p>O ano começou com <strong>Namaria</strong> tentando motivar o grupo com um GIF de Zumbi piscando. O resultado? O massacre crítico de 20 de janeiro.</p>
+                <Card title="Q1: O Zumbi da Sorte" emoji="🧟" bg="bg-green-50" border="border-green-700">
+                    <p className="mb-4">
+                        20 de Janeiro. Namaria tenta motivar o grupo. Jilsão, o Juiz Supremo, intervém.
+                    </p>
+                    <Quote text="zumbi nao flerta assim / piscadinha é game over" author="Jilsão" />
                     
-                    <div className="my-6 p-4 bg-gray-800 text-green-400 font-mono rounded text-sm">
-                        <p><strong>Jilsão (Juiz Supremo):</strong> "zumbi nao flerta assim / piscadinha é game over"</p>
-                        <p className="mt-2"><strong>Marcelim (Saudoso):</strong> "quem te mandou isso?"</p>
-                    </div>
-
-                    <div className="flex flex-col items-center gap-4 bg-black/10 p-4 rounded">
-                        <p className="font-bold text-center">Tente flertar como o Zumbi:</p>
+                    <div className="bg-white p-4 rounded border-2 border-green-200 text-center mt-4">
+                        <p className="font-bold mb-2">Simulador de Piscadinha Motivacional:</p>
                         <button 
-                            onClick={() => setWinkCount(c => c + 1)}
-                            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full shadow-lg active:scale-95"
+                            onClick={() => setWinks(w => w + 1)}
+                            className="bg-green-600 text-white font-bold py-2 px-6 rounded-full hover:bg-green-700 active:scale-95 transition"
                         >
-                            😉 Piscar pro Destino ({winkCount})
+                            😉 Piscar ({winks})
                         </button>
-                        {winkCount > 0 && winkCount < 5 && <span className="text-red-600 font-bold">Assustador. Pare.</span>}
-                        {winkCount >= 5 && <span className="text-red-600 font-bold">Jilsão desaprova sua técnica.</span>}
+                        {winks > 2 && <p className="text-red-600 font-bold mt-2 text-sm">PARA! TÁ ASSUSTADOR!</p>}
                     </div>
                 </Card>
             );
         };
 
-        const AbadaSection = () => {
-            const [verdict, setVerdict] = useState(null);
-
-            return (
-                <Card title="Q1: O Crime da Moda (Carnaval)" color="orange-100" icon={Crown}>
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                            <p className="mb-4">O trauma do <strong>Abadá do Bloco Aê</strong>. Uma combinação de cores que desafia a retina.</p>
-                            <div className="w-full h-32 abada-gradient rounded-lg flex items-center justify-center text-white font-black text-2xl border-4 border-dashed border-white shadow-xl">
-                                AZUL COM LARANJA
-                            </div>
-                            <p className="text-xs text-center mt-1 text-gray-500">*Reconstituição artística da tragédia</p>
+        const Carnaval = () => (
+            <Card title="Q1: Crise Estética no Carnaval" emoji="🎭" bg="bg-orange-50" border="border-orange-600">
+                <div className="grid md:grid-cols-2 gap-6 items-center">
+                    <div className="text-center">
+                        <div className="w-48 h-56 mx-auto abada-gradient border-4 border-black rounded shadow-lg flex flex-col justify-center items-center text-white font-black transform rotate-2">
+                            <span className="text-3xl drop-shadow-md">AZUL</span>
+                            <span className="text-sm">+</span>
+                            <span className="text-3xl drop-shadow-md">LARANJA</span>
                         </div>
-                        <div className="space-y-2">
-                            <h3 className="font-bold border-b border-black">O Julgamento:</h3>
-                            <Quote text="Azul com laranja... Tem lógica não" author="Marcelim" />
-                            <Quote text="Abadá mais feio que já inventaram" author="Marcelim" />
-                            <Quote text="Q isso roldao, abada ta bonito" author="Jilsão (Advogado do Diabo)" />
-                            
-                            <div className="flex gap-2 mt-4">
-                                <button onClick={() => setVerdict("Idoso Rabugento")} className="flex-1 bg-blue-500 text-white p-2 rounded font-bold hover:bg-blue-600">
-                                    Concordar com Marcelim
-                                </button>
-                                <button onClick={() => setVerdict("Contrarianismo Puro")} className="flex-1 bg-orange-500 text-white p-2 rounded font-bold hover:bg-orange-600">
-                                    Concordar com Jilsão
-                                </button>
-                            </div>
-                            {verdict && <div className="mt-2 text-center font-bold bg-white p-2 border border-black rounded">Você escolheu: {verdict}</div>}
-                        </div>
+                        <p className="text-xs mt-2 text-gray-500">Reconstituição do Abadá "Aê"</p>
                     </div>
-                </Card>
-            );
-        };
+                    <div>
+                        <h3 className="font-bold mb-2 border-b border-orange-300">Destaques do Trauma:</h3>
+                        <ul className="space-y-3 text-sm">
+                            <li className="flex items-start gap-2">
+                                ❌ <strong>Marcelim:</strong> "Abadá mais feio que já inventaram."
+                            </li>
+                            <li className="flex items-start gap-2">
+                                👀 <strong>Jilsão (Daltônico?):</strong> "Q isso roldao, abada ta bonito."
+                            </li>
+                            <li className="flex items-start gap-2">
+                                🥋 <strong>Nostalgia (Gavei):</strong> Lembrou da lendária "Briga da Neidoca". ("Única coisa que prestou foi a briga").
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </Card>
+        );
 
-        const BabyBoomSection = () => {
-            const [babyStats, setBabyStats] = useState({ name: "", trait: "" });
+        const BabyBoom = () => {
+            const [baby, setBaby] = useState(null);
 
-            const generateBaby = () => {
-                const names = ["Rafiki (Levi)", "Felipinho", "Anilson (Caio)", "Baby Jack"];
-                const traits = [
-                    "Entradas/Calvície (Gene Filipini)", 
-                    "Unhas de Velociraptor", 
-                    "Macrocefalia (Cabeça do Jilsão)", 
-                    "Pé da Mãe (Tamanho 39)", 
-                    "Volume Escrotal Gigantesco"
-                ];
-                setBabyStats({
-                    name: names[Math.floor(Math.random() * names.length)],
-                    trait: traits[Math.floor(Math.random() * traits.length)]
-                });
+            const babies = [
+                { name: "Levi (Rafiki)", feat: "Entradas / Calvície Genética", parent: "Junim" },
+                { name: "Felipinho", feat: "Volume Escrotal Lendário", parent: "PH" },
+                { name: "Caio (Anilson)", feat: "Pé da mãe (39) / Cabeça do pai", parent: "Jilsão" },
+                { name: "Baby Jack", feat: "Clandestino (Sem aprovação da namorada)", parent: "Jack" }
+            ];
+
+            const roll = () => {
+                setBaby(babies[Math.floor(Math.random() * babies.length)]);
             };
 
             return (
-                <Card title="O Grande Baby Boom de 2025" color="blue-100" icon={Baby}>
-                    <p className="mb-4">O grupo virou uma creche. Ninguém faz menina. A testosterona e a calvície dominam.</p>
-                    
-                    <div className="bg-white p-6 rounded-lg border-2 border-blue-300 text-center">
-                        <h3 className="font-bold text-xl mb-4 text-blue-600">🧬 Roleta Genética da Casa Maluca</h3>
-                        <div className="mb-6">
-                            <div className="text-4xl mb-2">👶</div>
-                            <div className="text-xl font-bold">{babyStats.name || "?"}</div>
-                            <div className="text-md text-gray-600">{babyStats.trait || "?"}</div>
-                        </div>
+                <Card title="A Creche Maluca (Extinção das Mulheres)" emoji="🍼" bg="bg-blue-50" border="border-blue-500">
+                    <p className="mb-4">
+                        2025: O ano em que o grupo só produziu meninos. Daviline prometeu: <em>"Daqui um ano a gente faz as beninas"</em>.
+                    </p>
+                    <div className="bg-white border-2 border-blue-200 p-6 rounded-lg text-center shadow-inner">
                         <button 
-                            onClick={generateBaby}
-                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition active:scale-95"
+                            onClick={roll}
+                            className="bg-blue-500 text-white font-bold py-3 px-8 rounded shadow-lg hover:bg-blue-600 transition mb-4 w-full md:w-auto"
                         >
-                            Gerar Herdeiro
+                            🎲 Girar Roleta Genética
                         </button>
-                    </div>
-
-                    <div className="mt-6 space-y-2 text-sm">
-                        <p>📌 <strong>Levi (Rafiki):</strong> Filho de Junim. Já nasceu com entradas.</p>
-                        <p>📌 <strong>Felipinho:</strong> Filho de PH. Elogiado pelo "sacão".</p>
-                        <p>📌 <strong>Caio (Anilson):</strong> Filho de Jilsão. Pé da mãe, cabeça do pai (Funko Pop humano).</p>
-                        <p>📌 <strong>Jack:</strong> Golpe de estado reprodutivo (pulou a etapa de apresentar a namorada).</p>
-                    </div>
-                </Card>
-            );
-        };
-
-        const MarcelimSection = () => {
-            const [onipresenca, setOnipresenca] = useState(false);
-
-            return (
-                <Card title="Q2: A Tragédia e Deificação de Marcelim" color="purple-100" icon={Heart}>
-                    <div className="relative">
-                        <p className="mb-4">
-                            O que começou como "Neurodengue" evoluiu para a ascensão espiritual. 
-                            Marcelim "Cabeção" Soyer agora é uma entidade onipresente.
-                        </p>
-
-                        <div className="bg-white p-4 rounded border-l-4 border-purple-500 mb-4">
-                            <h4 className="font-bold text-purple-700">O Ritual de Cura (Falho):</h4>
-                            <ul className="list-disc ml-5 text-sm space-y-1">
-                                <li>Camisetas "Celim" (Tamanho M para Tacão e Jackson)</li>
-                                <li>Terço da Misericórdia + Energias Quânticas</li>
-                                <li>Visualização de bolo da Prefeitura e pagode (Namaria)</li>
-                            </ul>
-                        </div>
-
-                        <div className="border-t border-gray-300 pt-4">
-                            <button 
-                                onClick={() => setOnipresenca(!onipresenca)}
-                                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-lg shadow-xl mb-4"
-                            >
-                                {onipresenca ? "DESATIVAR MODO ONIPRESENÇA" : "ATIVAR MODO ONIPRESENÇA"}
-                            </button>
-
-                            {onipresenca && (
-                                <div className="bg-black text-white p-4 rounded animate-pulse">
-                                    <p className="text-center text-xl font-mono">
-                                        👻 MARCELIM ESTÁ EM UBERLÂNDIA...<br/>
-                                        👻 E NO DF...<br/>
-                                        👻 E EM BH...<br/>
-                                        👻 E NA ITÁLIA...<br/>
-                                        <span className="text-yellow-400">"Agora você é verdadeiramente onipresente no meio de nós! Kkkk" - Matheus</span>
-                                    </p>
-                                    <div className="mt-4 text-center text-xs text-gray-400">
-                                        (Jilsão está tentando clarear esta div no Photoshop agora mesmo)
-                                    </div>
+                        
+                        {baby ? (
+                            <div className="animate-pulse">
+                                <h3 className="text-2xl font-black text-blue-800">{baby.name}</h3>
+                                <p className="text-sm font-bold text-gray-500 mt-1">Pai: {baby.parent}</p>
+                                <div className="mt-2 bg-yellow-100 text-yellow-800 px-3 py-1 rounded inline-block font-bold border border-yellow-300">
+                                    Herança: {baby.feat}
                                 </div>
-                            )}
-                        </div>
-                    </div>
-                </Card>
-            );
-        };
-
-        const MarathonSection = () => {
-            const [progress, setProgress] = useState(0);
-            const [status, setStatus] = useState("Aguardando largada");
-            const [videoFailed, setVideoFailed] = useState(false);
-
-            const runMarathon = () => {
-                setStatus("Correndo...");
-                setVideoFailed(false);
-                let p = 0;
-                const interval = setInterval(() => {
-                    p += 5;
-                    setProgress(p);
-                    if (p >= 100) {
-                        clearInterval(interval);
-                        setStatus("Chegada! Cadê o vídeo?");
-                        setVideoFailed(true);
-                    }
-                }, 100);
-            };
-
-            return (
-                <Card title="Q2: A Maratona e o Cinegrafista Chorão" color="yellow-100" icon={TrendingUp}>
-                    <p className="mb-4"><strong>Ju Dentinho</strong> correu 42km. Uma máquina. Uma besta enjaulada.</p>
-                    <p className="mb-4"><strong>Matheus</strong> tinha UMA função: filmar a chegada.</p>
-
-                    <div className="bg-white p-4 rounded border-2 border-black mb-4">
-                        <div className="w-full bg-gray-200 rounded-full h-6 mb-2">
-                            <div className="bg-yellow-500 h-6 rounded-full transition-all duration-300" style={{width: `${progress}%`}}></div>
-                        </div>
-                        <p className="text-center font-bold text-sm">{progress}% concluído (42km)</p>
-                    </div>
-
-                    <div className="flex gap-4 mb-4">
-                        <button onClick={runMarathon} disabled={progress > 0 && progress < 100} className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-4 rounded border-b-4 border-yellow-700 active:border-b-0">
-                            🏃‍♀️ Iniciar Maratona da Ju
-                        </button>
-                    </div>
-
-                    {videoFailed && (
-                        <div className="bg-red-100 border-l-4 border-red-500 p-4 animate-bounce">
-                            <h4 className="font-bold text-red-700 flex items-center gap-2"><Video size={16}/> ERRO DE FILMAGEM</h4>
-                            <p className="text-red-600">Matheus: "Eu vou chorar aqui kkk"</p>
-                            <p className="text-red-800 font-bold mt-2">VERDICTO DE JILSÃO: "Filha da puta do noivo nao consegue fazer o vídeo"</p>
-                        </div>
-                    )}
-                    
-                    <div className="mt-4 bg-yellow-200 p-2 rounded text-center">
-                        <p className="font-bold">Protocolo de Recuperação:</p>
-                        <p>🥤 Chopp de 1L (De grátis) > Isotônico</p>
-                    </div>
-                </Card>
-            );
-        };
-
-        const FoodSection = () => {
-            return (
-                <Card title="Q3: Crimes Gastronômicos" color="red-100" icon={Pizza}>
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div className="bg-white p-4 rounded shadow-md transform rotate-1">
-                            <h3 className="font-bold text-xl mb-2 text-center">🍕 Pizzaria do Gavei</h3>
-                            <div className="w-32 h-32 bg-yellow-300 border-4 border-red-500 mx-auto flex items-center justify-center font-bold text-red-600 text-center p-2 mb-2">
-                                FORMATO QUADRADO
                             </div>
-                            <ul className="text-sm space-y-1 mt-2">
-                                <li>✅ <strong>Frangavei a la catupimary</strong></li>
-                                <li>✅ <strong>Borda de Catubarony</strong> (Engenharia Civil Comestível)</li>
-                                <li>❌ <strong>Tempo de espera:</strong> Eterno (Matheus faminto)</li>
-                            </ul>
-                        </div>
-
-                        <div className="bg-white p-4 rounded shadow-md transform -rotate-1">
-                            <h3 className="font-bold text-xl mb-2 text-center">🍬 O Roubo dos Doces</h3>
-                            <p className="text-sm mb-2">Casamento da Laís (Outubro)</p>
-                            <div className="bg-gray-100 p-2 rounded text-xs space-y-2">
-                                <p><strong>Jilsão:</strong> "Deu nojo de ver fazer a pizza"</p>
-                                <p><strong>Também Jilsão:</strong> *Leva pizza e doces para casa*</p>
-                                <p><strong>Ana Maria:</strong> "Me obrigaram" (Mentira)</p>
-                            </div>
-                            <div className="mt-2 text-center font-bold text-red-500 border border-red-500 rounded p-1">
-                                STATUS: HIPOCRISIA DETECTADA
-                            </div>
-                        </div>
-                    </div>
-                </Card>
-            );
-        };
-
-        const CaceteAISection = () => {
-            const [inputText, setInputText] = useState("");
-            const [outputText, setOutputText] = useState("");
-
-            const handleTransform = () => {
-                // The Ricardo Filipini Effect
-                let text = inputText.replace(/sorvete/gi, "CACETE");
-                text = text.replace(/frio/gi, "duro");
-                text = text.replace(/gostoso/gi, "grosso");
-                setOutputText(text);
-            };
-
-            return (
-                <Card title="Q4: A Revolução Linguística (Meta AI)" color="pink-100" icon={MessageCircle}>
-                    <p className="mb-4">Ricardo (Junim) usou a IA para reescrever a realidade. A palavra "Sorvete" foi banida.</p>
-                    
-                    <div className="bg-white p-4 rounded-lg border-2 border-pink-400">
-                        <label className="block font-bold text-pink-600 mb-2">Simulador de Conversa com Matheus (Viciado):</label>
-                        <input 
-                            type="text" 
-                            className="w-full p-2 border border-gray-300 rounded mb-2"
-                            placeholder="Ex: Eu gosto muito de sorvete de morango..."
-                            value={inputText}
-                            onChange={(e) => setInputText(e.target.value)}
-                        />
-                        <button 
-                            onClick={handleTransform}
-                            className="bg-pink-500 text-white font-bold py-2 px-4 rounded hover:bg-pink-600 w-full"
-                        >
-                            Aplicar Filtro "Junim AI"
-                        </button>
-
-                        {outputText && (
-                            <div className="mt-4 p-4 bg-pink-50 border-l-4 border-pink-600">
-                                <p className="font-bold text-lg">Resultado:</p>
-                                <p className="text-xl uppercase font-comic">{outputText}</p>
-                            </div>
+                        ) : (
+                            <p className="text-gray-400 text-sm">Clique para revelar um herdeiro...</p>
                         )}
                     </div>
                 </Card>
             );
         };
 
-        const StatsTable = () => (
-            <div className="overflow-x-auto mb-8 bg-white rounded-lg shadow-lg">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="bg-black text-white">
-                            <th className="p-4 border-b">Membro</th>
-                            <th className="p-4 border-b">Feito Biológico</th>
-                            <th className="p-4 border-b">Nota Zueira</th>
-                        </tr>
-                    </thead>
-                    <tbody className="text-sm md:text-base">
-                        <tr className="border-b hover:bg-gray-100">
-                            <td className="p-4 font-bold">Ju Dentinho</td>
-                            <td className="p-4">Correu 42km</td>
-                            <td className="p-4 text-green-600 font-bold">10/10 (Sobreviveu ao noivo)</td>
-                        </tr>
-                        <tr className="border-b hover:bg-gray-100">
-                            <td className="p-4 font-bold">Jack</td>
-                            <td className="p-4">Gravidez Surpresa</td>
-                            <td className="p-4 text-green-600 font-bold">100/10 (Golpe de estado)</td>
-                        </tr>
-                        <tr className="border-b hover:bg-gray-100">
-                            <td className="p-4 font-bold">Jilsão</td>
-                            <td className="p-4">Produziu Caio</td>
-                            <td className="p-4 text-orange-500 font-bold">7/10 (Polêmica do pé)</td>
-                        </tr>
-                        <tr className="hover:bg-gray-100">
-                            <td className="p-4 font-bold">Ricardo</td>
-                            <td className="p-4">Produziu Levi</td>
-                            <td className="p-4 text-green-600 font-bold">9/10 (Gene da Calvície)</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        );
+        const Marcelim = () => {
+            const [isOmnipresent, setIsOmnipresent] = useState(false);
 
-        const BlackFridaySection = () => (
-            <Card title="Black Friday da Depressão Adulta" color="gray-200" icon={ShoppingCart}>
-                <div className="flex flex-col items-center text-center">
-                    <p className="mb-4">Esqueça PS5. Esqueça Whisky. O item do ano foi:</p>
-                    <div className="border-4 border-dashed border-gray-400 p-6 rounded bg-white w-full max-w-md">
-                        <h3 className="font-bold text-xl mb-2">🛒 Carrinho De Passeio Flick Até 15kgs</h3>
-                        <p className="text-3xl font-black text-green-600 mb-2">R$ 297,49</p>
-                        <p className="text-gray-500 italic text-sm">"Comprei so coisa pro caio" - Jilsão</p>
+            return (
+                <Card title="Q2: A Deificação de Marcelim" emoji="👼" bg="bg-purple-50" border="border-purple-600">
+                    <p className="mb-2">Da "Neurodengue" à eternidade.</p>
+                    <div className="bg-white p-4 rounded border-l-4 border-purple-400 mb-4 text-sm space-y-2">
+                        <p>👕 <strong>Logística:</strong> Camisetas "Celim" (Tacão e Jackson pediram M - pura esperança).</p>
+                        <p>🏥 <strong>Tratamento:</strong> Terço da Misericórdia + Pagode.</p>
+                        <p>🍔 <strong>Crítica Gastronômica Póstuma:</strong> Salgado de Estrada = "Ia mandar tomar no c*".</p>
+                    </div>
+                    
+                    <button 
+                        onClick={() => setIsOmnipresent(!isOmnipresent)}
+                        className={`w-full py-3 rounded font-bold transition-all ${isOmnipresent ? 'bg-yellow-400 text-black shadow-[0_0_15px_yellow]' : 'bg-purple-600 text-white'}`}
+                    >
+                        {isOmnipresent ? "✨ MODO ONIPRESENÇA ATIVADO ✨" : "Ativar Modo Onipresença"}
+                    </button>
+
+                    {isOmnipresent && (
+                        <div className="mt-4 p-4 bg-black text-white rounded text-center font-mono text-sm">
+                            <p>UBERLÂNDIA... DF... BH... ITÁLIA...</p>
+                            <p className="mt-2 text-yellow-300">"Agora você é verdadeiramente onipresente no meio de nós! Kkkk"</p>
+                        </div>
+                    )}
+                </Card>
+            );
+        };
+
+        const Maratona = () => {
+            const [progress, setProgress] = useState(0);
+            const [msg, setMsg] = useState("Aguardando largada...");
+
+            const run = () => {
+                if(progress > 0) return;
+                setMsg("Ju correndo 42km... Máquina...");
+                let p = 0;
+                const timer = setInterval(() => {
+                    p += 2;
+                    setProgress(p);
+                    if(p >= 100) {
+                        clearInterval(timer);
+                        setMsg("CHEGADA! Cadê o vídeo, Matheus?");
+                    }
+                }, 50);
+            };
+
+            return (
+                <Card title="Q2: Maratona & Fracasso Audiovisual" emoji="🏃‍♀️" bg="bg-yellow-50" border="border-yellow-500">
+                    <p><strong>Ju Dentinho:</strong> 42km. Besta Enjaulada.</p>
+                    <p><strong>Matheus:</strong> Tinha UMA função (filmar).</p>
+
+                    <div className="mt-4 bg-gray-200 rounded-full h-6 border border-gray-400 overflow-hidden relative">
+                        <div className="bg-yellow-500 h-full transition-all duration-100" style={{width: `${progress}%`}}></div>
+                    </div>
+                    <div className="flex justify-between items-center mt-2">
+                        <button onClick={run} className="bg-black text-white px-4 py-1 rounded text-sm font-bold hover:bg-gray-800">
+                            ▶️ Largar
+                        </button>
+                        <span className="text-xs font-bold text-gray-600">{msg}</span>
+                    </div>
+
+                    {progress === 100 && (
+                        <div className="mt-4 bg-red-100 border border-red-400 text-red-700 p-2 rounded text-center text-sm font-bold animate-bounce">
+                            🎥 ERRO: Matheus chorou e esqueceu de filmar.
+                            <br/><span className="text-xs font-normal">Jilsão: "Filha da p* do noivo..."</span>
+                        </div>
+                    )}
+                    <div className="mt-2 text-xs text-gray-500 text-center">Protocolo de recuperação: Chopp de 1L (De grátis).</div>
+                </Card>
+            );
+        };
+
+        const Formatura = () => (
+            <Card title="Q3: A Formatura das Mil Júlias" emoji="🎓" bg="bg-indigo-50" border="border-indigo-600">
+                <p>Julho. Colação de Grau da Dra. Ju.</p>
+                <div className="flex flex-col gap-2 mt-2">
+                    <Quote 
+                        text="Mil julia carai... Alfabeto conspirando." 
+                        author="Jilsão" 
+                        context="Impaciente na chamada nominal"
+                    />
+                    <div className="bg-white p-3 border-l-4 border-indigo-500 shadow-sm">
+                        <p className="font-bold text-indigo-900">O Momento de Glória:</p>
+                        <p className="text-sm">Ju "tacando o foda-se pra mesa" e ignorando o decoro acadêmico. <span className="text-green-600 font-bold">Aprovado pelo grupo.</span></p>
                     </div>
                 </div>
             </Card>
         );
 
-        const FooterPredictions = () => (
-            <div className="bg-gray-900 text-white p-8 rounded-t-3xl mt-8">
-                <h2 className="text-3xl font-bold mb-6 text-center text-yellow-400">🔮 Previsões para 2026</h2>
-                <div className="grid md:grid-cols-3 gap-4 text-center">
-                    <div className="bg-gray-800 p-4 rounded hover:bg-gray-700 transition">
-                        <div className="text-4xl mb-2">🦶</div>
-                        <h3 className="font-bold text-lg mb-2">Caio (Hobbit)</h3>
-                        <p className="text-gray-400 text-sm">Nascerá e será imediatamente comparado a um Hobbit devido aos pés 39.</p>
+        const Comida = () => (
+            <Card title="Q3: Crimes Gastronômicos" emoji="🍕" bg="bg-red-50" border="border-red-500">
+                <div className="space-y-6">
+                    {/* Pizza */}
+                    <div className="border-b pb-4 border-red-200">
+                        <h3 className="font-bold text-red-800 mb-2">1. A Pizzaria do Gavei</h3>
+                        <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 bg-yellow-400 border-2 border-red-600 flex items-center justify-center text-[10px] font-bold text-center leading-tight shadow pizza-shape">
+                                QUADRADA
+                            </div>
+                            <div className="text-sm">
+                                <p><strong>Inovação:</strong> Falta de forma redonda.</p>
+                                <p><strong>Engenharia:</strong> Borda de "Catubarony".</p>
+                                <p><strong>Crítica:</strong> "Demorada hein" (Matheus faminto).</p>
+                            </div>
+                        </div>
                     </div>
-                    <div className="bg-gray-800 p-4 rounded hover:bg-gray-700 transition">
-                        <div className="text-4xl mb-2">🕵️‍♂️</div>
-                        <h3 className="font-bold text-lg mb-2">Namorada do Jack</h3>
-                        <p className="text-gray-400 text-sm">Será apresentada e o grupo fingirá costume enquanto julga silenciosamente.</p>
-                    </div>
-                    <div className="bg-gray-800 p-4 rounded hover:bg-gray-700 transition">
-                        <div className="text-4xl mb-2">💸</div>
-                        <h3 className="font-bold text-lg mb-2">Matheus & Pets</h3>
-                        <p className="text-gray-400 text-sm">Comprará acessório para cachorro mais caro que o carrinho do bebê do Jilsão.</p>
+                    {/* Doces */}
+                    <div>
+                        <h3 className="font-bold text-red-800 mb-2">2. O Roubo dos Doces (Casamento Laís)</h3>
+                        <div className="bg-white p-3 rounded text-sm shadow-sm border border-gray-200">
+                            <p className="text-gray-500 text-xs mb-1">A Hipocrisia de Jilsão:</p>
+                            <p>🗣️ <strong>Antes:</strong> "Nojo de ver fazer a pizza".</p>
+                            <p>🥡 <strong>Depois:</strong> *Leva marmita de pizza e doces pra casa*.</p>
+                            <p className="mt-1 text-xs text-red-500 italic">Defesa: "Me obrigaram" (Mentira confirmada).</p>
+                        </div>
                     </div>
                 </div>
-                <div className="mt-8 text-center text-gray-500 text-xs">
-                    <p>Relatório compilado pela Inteligência Artificial Oficial da Casa Maluca (vulgo "Cacete AI")</p>
-                    <p>Referência: Conversa do WhatsApp com Casa Maluca 🏚.txt</p>
-                </div>
-            </div>
+            </Card>
         );
 
-        // --- Componente Principal ---
+        const CaceteAI = () => {
+            const [text, setText] = useState("");
+            
+            const transform = (input) => {
+                let out = input.replace(/sorvete/gi, "CACETE");
+                out = out.replace(/frio/gi, "duro");
+                out = out.replace(/chupar/gi, "degustar");
+                return out;
+            };
+
+            return (
+                <Card title="Q4: A Revolução Linguística (Junim)" emoji="🤖" bg="bg-pink-50" border="border-pink-400">
+                    <p className="mb-2 text-sm">Ricardo usou a Meta AI para substituir "Sorvete" por... você sabe.</p>
+                    <div className="bg-white p-4 rounded-lg shadow-inner border border-pink-200">
+                        <p className="text-xs font-bold text-pink-500 mb-1">FILTRO "JUNIM":</p>
+                        <input 
+                            type="text" 
+                            placeholder="Digite: Eu adoro sorvete..." 
+                            className="w-full p-2 border border-gray-300 rounded mb-2 text-sm"
+                            onChange={(e) => setText(transform(e.target.value))}
+                        />
+                        {text && (
+                            <p className="text-lg font-black text-pink-700 comic mt-2 uppercase">"{text}"</p>
+                        )}
+                    </div>
+                </Card>
+            );
+        };
+
+        const BlackFriday = () => (
+            <Card title="Black Friday: O Fim da Juventude" emoji="🛒" bg="bg-gray-100" border="border-gray-500">
+                <div className="text-center">
+                    <p className="mb-2 font-bold">Item mais cobiçado do ano:</p>
+                    <div className="bg-white p-4 inline-block rounded shadow-lg border-2 border-dashed border-gray-400 transform rotate-1">
+                        <h3 className="font-bold text-gray-800">Carrinho De Passeio Flick</h3>
+                        <p className="text-3xl font-black text-green-600 my-1">R$ 297,49</p>
+                        <p className="text-xs text-gray-500">Jilsão: "Comprei so coisa pro caio..."</p>
+                    </div>
+                </div>
+            </Card>
+        );
+
+        const Footer = () => (
+            <footer className="bg-gray-900 text-white p-8 md:p-12 mt-8 text-center rounded-t-[40px]">
+                <h2 className="text-2xl font-bold mb-6 text-yellow-400">🔮 PREVISÕES 2026</h2>
+                <div className="grid gap-4 md:grid-cols-3 text-sm">
+                    <div className="bg-gray-800 p-4 rounded border border-gray-700">
+                        <span className="text-3xl block mb-2">🦶</span>
+                        <strong>O Hobbit Caio:</strong> Nascerá calçando 39.
+                    </div>
+                    <div className="bg-gray-800 p-4 rounded border border-gray-700">
+                        <span className="text-3xl block mb-2">🤐</span>
+                        <strong>A Namorada de Jack:</strong> O grupo julgará em silêncio.
+                    </div>
+                    <div className="bg-gray-800 p-4 rounded border border-gray-700">
+                        <span className="text-3xl block mb-2">🐶</span>
+                        <strong>Matheus:</strong> Gastará o PIB num acessório pet inútil.
+                    </div>
+                </div>
+                <div className="mt-10 text-xs text-gray-500 font-mono">
+                    Relatório compilado pela "Cacete AI" - Casa Maluca 2025
+                </div>
+            </footer>
+        );
+
+        // --- App Principal ---
 
         const App = () => {
             return (
-                <div className="max-w-4xl mx-auto min-h-screen shadow-2xl bg-white">
-                    <IntroSection />
-                    
+                <div className="max-w-3xl mx-auto min-h-screen shadow-2xl bg-white border-x border-gray-200">
+                    <Header />
                     <div className="px-4 md:px-8">
-                        <ZumbiSection />
-                        <AbadaSection />
-                        <BabyBoomSection />
-                        <MarcelimSection />
-                        <MarathonSection />
-                        <FoodSection />
-                        <StatsTable />
-                        <CaceteAISection />
-                        <BlackFridaySection />
+                        <Zumbi />
+                        <Carnaval />
+                        <Marcelim />
+                        <Maratona />
+                        <Formatura />
+                        <Comida />
+                        <BabyBoom />
+                        <CaceteAI />
+                        <BlackFriday />
                     </div>
-
-                    <FooterPredictions />
+                    <Footer />
                 </div>
             );
         };
